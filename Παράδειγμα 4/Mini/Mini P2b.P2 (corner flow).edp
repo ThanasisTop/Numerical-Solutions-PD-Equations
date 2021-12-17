@@ -1,0 +1,86 @@
+real [int] errorH1(7);
+real [int] errorH0(7);
+real [int] errorP(7);
+real [int] h(7);
+real epsilon=1.0e-6;
+
+func u1=-sin(x*y)*x;
+func u2=sin(x*y)*y;
+func p=cos(x*y)-0.9460830703671845;
+
+func sol1x=-(cos(x*y)*x*y)-sin(x*y);
+func sol2y=(cos(x*y)*x*y)+sin(x*y);
+
+func fx=-sin(x*y)*x*(x^2+y^2)+2.0*cos(x*y)*y-sin(x*y)*y;
+func fy=sin(x*y)*y*(x^2+y^2)-2.0*cos(x*y)*x-sin(x*y)*x;
+
+
+int n=1;
+
+for(int i=0; i<6; i++){
+
+
+mesh Th = square(n,n);
+plot(Th,wait=true);
+
+fespace Vh(Th, P2b);
+Vh uh1,uh2;
+Vh w1, w2;
+
+fespace Xh(Th, P2);
+Xh ph, qh;
+
+
+problem Stokes(uh1,uh2,ph,w1,w2,qh, solver=Crout)
+=int2d(Th)(
+ dx(uh1)*dx(w1)
++dy(uh1)*dy(w1)
++dx(uh2)*dx(w2)
++dy(uh2)*dy(w2))
+-int2d(Th)(ph*(dx(w1)+dy(w2)))
+-int2d(Th)(qh*(dx(uh1)+dy(uh2)))
++int2d(Th)(epsilon*ph*qh)
+
++int2d(Th)(
+-fx*w1-fy*w2
+)
+
++on(1,4, uh1=0, uh2=0)
++on(2, uh1=-sin(y), uh2=y*sin(y))
++on(3, uh1=-x*sin(x), uh2=sin(x));
+
+Stokes;
+
+
+plot([uh1,uh2],ph,wait=true);
+
+
+errorH0[i]=sqrt(int2d(Th)((u1-uh1)^2+(u2-uh2)^2));
+errorH1[i]=sqrt(int2d(Th)((u1-uh1)*(u1-uh1)+(u2-uh2)*(u2-uh2))+int2d(Th)((dx(uh1)-sol1x)*(dx(uh1)-sol1x)+(dy(uh2)-sol2y)*(dy(uh2)-sol2y)));
+errorP[i]=sqrt(int2d(Th)((ph-p)*(ph-p)));
+
+
+n=2*n;
+}
+
+
+for(int i=0; i<5; i++){
+cout<<"error for u with H0-norm = "<<errorH0[i]<<endl;
+}
+cout<<"-------------------------------------------------"<<endl;
+for(int i=0; i<5; i++){
+cout<<"error for u with H1-norm = "<<errorH1[i]<<endl;
+}
+cout<<"-------------------------------------------------"<<endl;
+for(int i=0; i<5; i++){
+cout<<"error for p with H0-norm = "<<errorP[i]<<endl;
+}
+cout<<"-------------------------------------------------"<<endl;
+for(int i=1; i<5; i++){
+
+cout<<"error order for u with H0-norm = "<<log(errorH0[i]/errorH0[i+1])/log(2.)<<endl;
+cout<<"error order for u with H1-norm = "<<log(errorH1[i]/errorH1[i+1])/log(2.)<<endl;
+cout<<"error order for p with H0-norm = "<<log(errorP[i]/errorP[i+1])/log(2.)<<endl;
+cout<<"-------------------------------------------------"<<endl;
+}
+

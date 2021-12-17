@@ -1,0 +1,169 @@
+-- FreeFem++ v4.400003 (jeu. 12 dΓ©c. 2019 13:58:15 - git v4.4-3-9-gc37e08e1)
+ Load: lg_fem lg_mesh lg_mesh3 eigenvalue
+    1 : real [int] errorH1(7);
+    2 : real [int] errorH0(7);
+    3 : real [int] errorP(7);
+    4 : real [int] h(7);
+    5 : real epsilon=1.0e-6;
+    6 :
+    7 :
+    8 : func u1=(x^4-2.0*x^3+x^2)*(2.0*y^3-y);
+    9 : func u2=-(2.0*x^3-3.0*x^2+x)*(y^4-y^2);
+   10 :
+   11 : func p=(4.0*x^3-6.0*x^2+2.0*x)*(2.0*y^3-y)+0.4*(6.0*x^5-15.0*x^4+10.0*x^3)*y-0.1;
+   12 :
+   13 : func fx=0;
+   14 : func fy=(12.0*x-6.0)*(y^4-y^2)+(8.0*x^3-12.0*x^2+4.0*x)*(6.0*y^2-1.0)+0.4*(6.0*x^5-15.0*x^4+10.0*x^3);
+   15 :
+   16 : func sol1x=(4.0*x^3-6.0*x^2+2.0*x)*(2.0*y^3-y);
+   17 : func sol2y=-(2.0*x^3-3.0*x^2+x)*(4.0*y^3-2.0*y);
+   18 :
+   19 : int n=1;
+   20 :
+   21 : for(int i=0; i<6; i++){
+   22 :
+   23 :
+   24 : mesh Th = square(n,n);
+   25 : plot(Th,wait=true);
+   26 :
+   27 : fespace Vh(Th, P2b);
+   28 : Vh uh1,uh2;
+   29 : Vh w1, w2;
+   30 :
+   31 : fespace Xh(Th, P2);
+   32 : Xh ph, qh;
+   33 :
+   34 : problem Stokes(uh1,uh2,ph,w1,w2,qh, solver=Crout)
+   35 : =int2d(Th)(
+   36 :  dx(uh1)*dx(w1)
+   37 : +dy(uh1)*dy(w1)
+   38 : +dx(uh2)*dx(w2)
+   39 : +dy(uh2)*dy(w2))
+   40 : -int2d(Th)(ph*(dx(w1)+dy(w2)))
+   41 : -int2d(Th)(qh*(dx(uh1)+dy(uh2)))
+   42 : +int2d(Th)(epsilon*ph*qh)
+   43 :
+   44 : +int2d(Th)(
+   45 : -fx*w1-fy*w2
+   46 : )
+   47 :
+   48 :
+   49 : +on(3, uh1=x^4-2.0*x^3+x^2,uh2=0)
+   50 : +on(1,2,4, uh1=u1, uh2=u2);
+   51 :
+   52 :
+   53 : Stokes;
+   54 :
+   55 :
+   56 : plot([uh1,uh2],ph,wait=true);
+   57 :
+   58 :
+   59 :
+   60 : errorH0[i]=sqrt(int2d(Th)((u1-uh1)^2+(u2-uh2)^2));
+   61 : errorH1[i]=sqrt(int2d(Th)((u1-uh1)*(u1-uh1)+(u2-uh2)*(u2-uh2))
+   62 : +int2d(Th)((dx(uh1)-sol1x)*(dx(uh1)-sol1x)+(dy(uh2)-sol2y)*(dy(uh2)-sol2y)));
+   63 : errorP[i]=sqrt(int2d(Th)((p-ph)*(p-ph)));
+   64 :
+   65 :
+   66 : n=2*n;
+   67 : }
+   68 :
+   69 : for(int i=0; i<5; i++){
+   70 : cout<<"error for u with H0-norm = "<<errorH0[i]<<endl;
+   71 : }
+   72 : cout<<"-------------------------------------------------
+  ... : "<<endl;
+   73 : for(int i=0; i<5; i++){
+   74 : cout<<"error for u with H1-norm = "<<errorH1[i]<<endl;
+   75 : }
+   76 : cout<<"-------------------------------------------------
+  ... : "<<endl;
+   77 : for(int i=0; i<5; i++){
+   78 : cout<<"error for p with H0-norm = "<<errorP[i]<<endl;
+   79 : }
+   80 : cout<<"-------------------------------------------------
+  ... : "<<endl;
+   81 : for(int i=1; i<5; i++){
+   82 :
+   83 : cout<<"error order for u with H0-norm = "<<log(errorH0[i]/errorH0[i+1])/log(2.)<<endl;
+   84 : cout<<"error order for u with H1-norm = "<<log(errorH1[i]/errorH1[i+1])/log(2.)<<endl;
+   85 : cout<<"error order for p with H0-norm = "<<log(errorP[i]/errorP[i+1])/log(2.)<<endl;
+   86 : cout<<"-------------------------------------------------
+  ... : "<<endl;
+   87 :
+   88 : }
+   89 :  sizestack + 1024 =6188  ( 5164 )
+ 
+  -- Square mesh : nb vertices  =4 ,  nb triangles = 2 ,  nb boundary edges 4
+  SkyLineMatrix: size pL/pU: 31 344 344 moy=11.0968
+  -- Solve :
+          min -0.0078127  max 0.0625
+          min -0.0234378  max 0.00694452
+          min -62501  max 125001
+freeglut (ffglut.exe): fgInitGL2: fghGenBuffers is NULL
+  -- Square mesh : nb vertices  =9 ,  nb triangles = 8 ,  nb boundary edges 8
+  SkyLineMatrix: size pL/pU: 91 1638 1638 moy=18
+  -- Solve :
+          min -0.0199893  max 0.0625
+          min -0.0217125  max 0.0207569
+          min -2.56184  max 0.847917
+  -- Square mesh : nb vertices  =25 ,  nb triangles = 32 ,  nb boundary edges 16
+  SkyLineMatrix: size pL/pU: 307 9432 9432 moy=30.7231
+  -- Solve :
+          min -0.0168359  max 0.0625
+          min -0.0244661  max 0.0241836
+          min -0.909454  max 0.299627
+  -- Square mesh : nb vertices  =81 ,  nb triangles = 128 ,  nb boundary edges 32
+  SkyLineMatrix: size pL/pU: 1123 60256 60256 moy=53.6563
+  -- Solve :
+          min -0.0169371  max 0.0625
+          min -0.0240026  max 0.0237513
+          min -0.370359  max 0.320773
+  -- Square mesh : nb vertices  =289 ,  nb triangles = 512 ,  nb boundary edges 64
+  SkyLineMatrix: size pL/pU: 4291 426625 426625 moy=99.4232
+  -- Solve :
+          min -0.0170106  max 0.0625
+          min -0.0240449  max 0.0239995
+          min -0.181251  max 0.309081
+  -- Square mesh : nb vertices  =1089 ,  nb triangles = 2048 ,  nb boundary edges 128
+  SkyLineMatrix: size pL/pU: 16771 3200523 3200523 moy=190.837
+  -- Solve :
+          min -0.0170105  max 0.0625
+          min -0.0240529  max 0.0240361
+          min -0.145716  max 0.301156
+error for u with H0-norm = 0.011373
+error for u with H0-norm = 0.00310403
+error for u with H0-norm = 0.000547545
+error for u with H0-norm = 7.74908e-05
+error for u with H0-norm = 1.05683e-05
+-------------------------------------------------
+error for u with H1-norm = 0.0679484
+error for u with H1-norm = 0.0384651
+error for u with H1-norm = 0.0115208
+error for u with H1-norm = 0.00314798
+error for u with H1-norm = 0.000806428
+-------------------------------------------------
+error for p with H0-norm = 27950.9
+error for p with H0-norm = 0.199223
+error for p with H0-norm = 0.0325122
+error for p with H0-norm = 0.00839739
+error for p with H0-norm = 0.00242634
+-------------------------------------------------
+error order for u with H0-norm = 2.50309
+error order for u with H1-norm = 1.73931
+error order for p with H0-norm = 2.61533
+-------------------------------------------------
+error order for u with H0-norm = 2.82088
+error order for u with H1-norm = 1.87174
+error order for p with H0-norm = 1.95297
+-------------------------------------------------
+error order for u with H0-norm = 2.87428
+error order for u with H1-norm = 1.96481
+error order for p with H0-norm = 1.79116
+-------------------------------------------------
+error order for u with H0-norm = 2.93494
+error order for u with H1-norm = 2.02041
+error order for p with H0-norm = 1.87357
+-------------------------------------------------
+times: compile 0.258s, execution 3.832s,  mpirank:0
+ try getConsole C:\Users\sakis\Desktop\FreeFemCodes\Correct Codes\Παράδειγμα 3\Mini\Mini P2b.P2.edp

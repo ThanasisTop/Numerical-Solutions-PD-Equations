@@ -1,0 +1,179 @@
+-- FreeFem++ v4.400003 (jeu. 12 dΓ©c. 2019 13:58:15 - git v4.4-3-9-gc37e08e1)
+ Load: lg_fem lg_mesh lg_mesh3 eigenvalue
+    1 : real [int] errorH1(7);
+    2 : real [int] errorH0(7);
+    3 : real [int] errorP(7);
+    4 : real [int] h(7);
+    5 : real epsilon=1.0e-6;
+    6 :
+    7 :
+    8 : func u1=sin(2.0*pi*y)*(1.0-cos(2.0*pi*x));
+    9 : func u2=sin(2.0*pi*x)*(cos(2.0*pi*y)-1.0);
+   10 : func p=2.0*pi*(cos(2.0*pi*y)-cos(2.0*pi*x));
+   11 :
+   12 : func sol1x=2.0*pi*sin(2.0*pi*y)*sin(2.0*pi*x);
+   13 : func sol2y=-2.0*pi*sin(2.0*pi*x)*sin(2.0*pi*y);
+   14 :
+   15 : func fx=-4.0*pi*pi*sin(2.0*pi*y)*(2.0*cos(2.0*pi*x)-1.0)+4.0*pi*pi*sin(2.0*pi*x);
+   16 : func fy=4.0*pi*pi*sin(2.0*pi*x)*(2.0*cos(2.0*pi*y)-1.0)-4.0*pi*pi*sin(2.0*pi*y);
+   17 :
+   18 : int n=1;
+   19 :
+   20 : for(int i=0; i<7; i++){
+   21 :
+   22 :
+   23 : mesh Th = square(n,n);
+   24 : plot(Th,wait=true);
+   25 :
+   26 : fespace Vh(Th, P2);
+   27 : Vh uh1,uh2;
+   28 : Vh w1, w2;
+   29 :
+   30 : fespace Xh(Th, P1);
+   31 : Xh ph, qh;
+   32 :
+   33 : problem Stokes(uh1,uh2,ph,w1,w2,qh, solver=Crout)
+   34 : =int2d(Th)(
+   35 :  dx(uh1)*dx(w1)
+   36 : +dy(uh1)*dy(w1)
+   37 : +dx(uh2)*dx(w2)
+   38 : +dy(uh2)*dy(w2))
+   39 : -int2d(Th)(ph*(dx(w1)+dy(w2)))
+   40 : -int2d(Th)(qh*(dx(uh1)+dy(uh2)))
+   41 : +int2d(Th)(epsilon*ph*qh)
+   42 :
+   43 : +int2d(Th)(
+   44 : -fx*w1-fy*w2
+   45 : )
+   46 :
+   47 : +on(1,2,3,4, uh1=u1,uh2=u2);
+   48 :
+   49 :
+   50 : Stokes;
+   51 :
+   52 :
+   53 : plot([uh1,uh2],ph,wait=true);
+   54 :
+   55 :
+   56 :
+   57 : errorH0[i]=sqrt(int2d(Th)((u1-uh1)^2+(u2-uh2)^2));
+   58 : errorH1[i]=sqrt(int2d(Th)((u1-uh1)*(u1-uh1)+(u2-uh2)*(u2-uh2))
+   59 : +int2d(Th)((dx(uh1)-sol1x)*(dx(uh1)-sol1x)+(dy(uh2)-sol2y)*(dy(uh2)-sol2y)));
+   60 : errorP[i]=sqrt(int2d(Th)((p-ph)*(p-ph)));
+   61 :
+   62 :
+   63 : n=2*n;
+   64 : }
+   65 :
+   66 : for(int i=0; i<6; i++){
+   67 : cout<<"error for u with H0-norm = "<<errorH0[i]<<endl;
+   68 : }
+   69 : cout<<"-------------------------------------------------
+  ... : "<<endl;
+   70 : for(int i=0; i<6; i++){
+   71 : cout<<"error for u with H1-norm = "<<errorH1[i]<<endl;
+   72 : }
+   73 : cout<<"-------------------------------------------------
+  ... : "<<endl;
+   74 : for(int i=0; i<6; i++){
+   75 : cout<<"error for p with H0-norm = "<<errorP[i]<<endl;
+   76 : }
+   77 : cout<<"-------------------------------------------------
+  ... : "<<endl;
+   78 : for(int i=1; i<6; i++){
+   79 :
+   80 : cout<<"error order for u with H0-norm = "<<log(errorH0[i]/errorH0[i+1])/log(2.)<<endl;
+   81 : cout<<"error order for u with H1-norm = "<<log(errorH1[i]/errorH1[i+1])/log(2.)<<endl;
+   82 : cout<<"error order for p with H0-norm = "<<log(errorP[i]/errorP[i+1])/log(2.)<<endl;
+   83 : cout<<"-------------------------------------------------
+  ... : "<<endl;
+   84 :
+   85 : }
+   86 :  sizestack + 1024 =4268  ( 3244 )
+ 
+  -- Square mesh : nb vertices  =4 ,  nb triangles = 2 ,  nb boundary edges 4
+  SkyLineMatrix: size pL/pU: 22 182 182 moy=8.27273
+  -- Solve :
+          min -4.89843e-16  max 2.44919e-16
+          min -2.44919e-16  max 4.89843e-16
+          min -7.4446e-15  max 7.4446e-15
+freeglut (ffglut.exe): fgInitGL2: fghGenBuffers is NULL
+  -- Square mesh : nb vertices  =9 ,  nb triangles = 8 ,  nb boundary edges 8
+  SkyLineMatrix: size pL/pU: 59 776 776 moy=13.1525
+  -- Solve :
+          min -1.63962  max 1.63962
+          min -1.63962  max 1.63962
+          min -12.4186  max 12.4186
+  -- Square mesh : nb vertices  =25 ,  nb triangles = 32 ,  nb boundary edges 16
+  SkyLineMatrix: size pL/pU: 187 4174 4174 moy=22.3209
+  -- Solve :
+          min -2.05477  max 2.05477
+          min -2.05477  max 2.05477
+          min -15.2455  max 15.2455
+  -- Square mesh : nb vertices  =81 ,  nb triangles = 128 ,  nb boundary edges 32
+  SkyLineMatrix: size pL/pU: 659 25425 25425 moy=38.5812
+  -- Solve :
+          min -2.00381  max 2.00381
+          min -2.00381  max 2.00381
+          min -13.2169  max 13.2169
+  -- Square mesh : nb vertices  =289 ,  nb triangles = 512 ,  nb boundary edges 64
+  SkyLineMatrix: size pL/pU: 2467 176368 176368 moy=71.4909
+  -- Solve :
+          min -2.00025  max 2.00025
+          min -2.00025  max 2.00025
+          min -12.7282  max 12.7282
+  -- Square mesh : nb vertices  =1089 ,  nb triangles = 2048 ,  nb boundary edges 128
+  SkyLineMatrix: size pL/pU: 9539 1295316 1295316 moy=135.792
+  -- Solve :
+          min -2.00002  max 2.00002
+          min -2.00002  max 2.00002
+          min -12.6068  max 12.6068
+  -- Square mesh : nb vertices  =4225 ,  nb triangles = 8192 ,  nb boundary edges 256
+  SkyLineMatrix: size pL/pU: 37507 9908861 9908861 moy=264.187
+  -- Solve :
+          min -2  max 2
+          min -2  max 2
+          min -12.5765  max 12.5765
+error for u with H0-norm = 0.995989
+error for u with H0-norm = 0.291919
+error for u with H0-norm = 0.0513719
+error for u with H0-norm = 0.00596034
+error for u with H0-norm = 0.000745253
+error for u with H0-norm = 9.34248e-05
+-------------------------------------------------
+error for u with H1-norm = 4.33065
+error for u with H1-norm = 3.26153
+error for u with H1-norm = 1.0515
+error for u with H1-norm = 0.265835
+error for u with H1-norm = 0.0672025
+error for u with H1-norm = 0.016865
+-------------------------------------------------
+error for p with H0-norm = 6.39088
+error for p with H0-norm = 1.28827
+error for p with H0-norm = 0.774747
+error for p with H0-norm = 0.155787
+error for p with H0-norm = 0.0367938
+error for p with H0-norm = 0.00906974
+-------------------------------------------------
+error order for u with H0-norm = 2.50652
+error order for u with H1-norm = 1.6331
+error order for p with H0-norm = 0.733641
+-------------------------------------------------
+error order for u with H0-norm = 3.10751
+error order for u with H1-norm = 1.98385
+error order for p with H0-norm = 2.31415
+-------------------------------------------------
+error order for u with H0-norm = 2.99959
+error order for u with H1-norm = 1.98395
+error order for p with H0-norm = 2.08204
+-------------------------------------------------
+error order for u with H0-norm = 2.99585
+error order for u with H1-norm = 1.99448
+error order for p with H0-norm = 2.02033
+-------------------------------------------------
+error order for u with H0-norm = 2.99134
+error order for u with H1-norm = 1.99847
+error order for p with H0-norm = 2.00503
+-------------------------------------------------
+times: compile 0.247s, execution 9.322s,  mpirank:0
+ try getConsole C:\Users\sakis\Desktop\FreeFemCodes\Correct Codes\Παράδειγμα 2\Taylor-Hood\Taylor-Hood P2.P1.edp

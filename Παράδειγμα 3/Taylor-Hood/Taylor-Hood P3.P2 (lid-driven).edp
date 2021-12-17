@@ -1,0 +1,90 @@
+load "Element_P3"
+
+real [int] errorH1(7);
+real [int] errorH0(7);
+real [int] errorP(7);
+real [int] h(7);
+real epsilon=1.0e-6;
+
+
+func u1=(x^4-2.0*x^3+x^2)*(2.0*y^3-y);
+func u2=-(2.0*x^3-3.0*x^2+x)*(y^4-y^2);
+
+func p=(4.0*x^3-6.0*x^2+2.0*x)*(2.0*y^3-y)+0.4*(6.0*x^5-15.0*x^4+10.0*x^3)*y-0.1;
+
+func fx=0;
+func fy=(12.0*x-6.0)*(y^4-y^2)+(8.0*x^3-12.0*x^2+4.0*x)*(6.0*y^2-1.0)+0.4*(6.0*x^5-15.0*x^4+10.0*x^3);
+
+func sol1x=(4.0*x^3-6.0*x^2+2.0*x)*(2.0*y^3-y);
+func sol2y=-(2.0*x^3-3.0*x^2+x)*(4.0*y^3-2.0*y);
+
+int n=1;
+
+for(int i=0; i<6; i++){
+
+
+mesh Th = square(n,n);
+plot(Th,wait=true);
+
+fespace Vh(Th, P3);
+Vh uh1,uh2;
+Vh w1, w2;
+
+fespace Xh(Th, P2);
+Xh ph, qh;
+
+problem Stokes(uh1,uh2,ph,w1,w2,qh, solver=Crout)
+=int2d(Th)(
+ dx(uh1)*dx(w1)
++dy(uh1)*dy(w1)
++dx(uh2)*dx(w2)
++dy(uh2)*dy(w2))
+-int2d(Th)(ph*(dx(w1)+dy(w2)))
+-int2d(Th)(qh*(dx(uh1)+dy(uh2)))
++int2d(Th)(epsilon*ph*qh)
+
++int2d(Th)(
+-fx*w1-fy*w2
+)
+
+
++on(3, uh1=x^4-2.0*x^3+x^2,uh2=0)
++on(1,2,4, uh1=u1, uh2=u2);
+
+
+Stokes;
+
+
+plot([uh1,uh2],ph,wait=true);
+
+
+
+errorH0[i]=sqrt(int2d(Th)((u1-uh1)^2+(u2-uh2)^2));
+errorH1[i]=sqrt(int2d(Th)((u1-uh1)*(u1-uh1)+(u2-uh2)*(u2-uh2))
++int2d(Th)((dx(uh1)-sol1x)*(dx(uh1)-sol1x)+(dy(uh2)-sol2y)*(dy(uh2)-sol2y)));
+errorP[i]=sqrt(int2d(Th)((p-ph)*(p-ph)));
+
+
+n=2*n;
+}
+
+for(int i=0; i<5; i++){
+cout<<"error for u with H0-norm = "<<errorH0[i]<<endl;
+}
+cout<<"-------------------------------------------------"<<endl;
+for(int i=0; i<5; i++){
+cout<<"error for u with H1-norm = "<<errorH1[i]<<endl;
+}
+cout<<"-------------------------------------------------"<<endl;
+for(int i=0; i<5; i++){
+cout<<"error for p with H0-norm = "<<errorP[i]<<endl;
+}
+cout<<"-------------------------------------------------"<<endl;
+for(int i=1; i<5; i++){
+
+cout<<"error order for u with H0-norm = "<<log(errorH0[i]/errorH0[i+1])/log(2.)<<endl;
+cout<<"error order for u with H1-norm = "<<log(errorH1[i]/errorH1[i+1])/log(2.)<<endl;
+cout<<"error order for p with H0-norm = "<<log(errorP[i]/errorP[i+1])/log(2.)<<endl;
+cout<<"-------------------------------------------------"<<endl;
+
+}

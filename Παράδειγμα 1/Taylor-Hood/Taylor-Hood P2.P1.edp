@@ -1,0 +1,85 @@
+real [int] errorH1(7);
+real [int] errorH0(7);
+real [int] errorP(7);
+real [int] h(7);
+real epsilon=1.0e-6;
+
+
+func u1=x^2*(1.0-x)*(1.0-x)*2.0*y*(1.0-y)*(2.0*y-1);
+func u2=y^2*(1.0-y)*(1.0-y)*2.0*x*(1.0-x)*(1-2.0*x);
+func p=x*(1.0-x)*(1.0-y)-1.0/12.0;
+
+func sol1x=(2.0*x*(1.0-x)*(1.0-x)-2.0*x*x*(1.0-x))*2.0*y*(1.0-y)*(2.0*y-1);
+func sol2y=(2.0*y*(1.0-y)*(1.0-y)-2.0*y*y*(1.0-y))*2.0*x*(1.0-x)*(1-2.0*x);
+
+func fx=-4.0*y*(1.0-y)*(2.0*y-1)*((1.0-2.0*x)^2-2.0*x*(1.0-x))-12.0*x^2*(1.0-x)^2*(1.0-2.0*y)+(1.0-2.0*x)*(1.0-y);
+func fy=-4.0*x*(1.0-x)*(1.0-2.0*x)*((1.0-2.0*y)^2-2.0*y*(1.0-y))-12.0*y^2*(1.0-y)^2*(2.0*x-1.0)-x*(1.0-x);
+
+int n=1;
+
+for(int i=0; i<7; i++){
+
+
+mesh Th = square(n,n);
+plot(Th,wait=true);
+
+fespace Vh(Th, P2);
+Vh uh1,uh2;
+Vh w1, w2;
+
+fespace Xh(Th, P1);
+Xh ph, qh;
+
+problem Stokes(uh1,uh2,ph,w1,w2,qh, solver=Crout)
+=int2d(Th)(
+ dx(uh1)*dx(w1)
++dy(uh1)*dy(w1)
++dx(uh2)*dx(w2)
++dy(uh2)*dy(w2))
+-int2d(Th)(ph*(dx(w1)+dy(w2)))
+-int2d(Th)(qh*(dx(uh1)+dy(uh2)))
++int2d(Th)(epsilon*ph*qh)
+
++int2d(Th)(
+-fx*w1-fy*w2
+)
+
++on(1,2,3,4, uh1=u1,uh2=u2);
+
+
+Stokes;
+
+
+plot([uh1,uh2],ph,wait=true);
+
+
+
+errorH0[i]=sqrt(int2d(Th)((u1-uh1)^2+(u2-uh2)^2));
+errorH1[i]=sqrt(int2d(Th)((u1-uh1)*(u1-uh1)+(u2-uh2)*(u2-uh2))
++int2d(Th)((dx(uh1)-sol1x)*(dx(uh1)-sol1x)+(dy(uh2)-sol2y)*(dy(uh2)-sol2y)));
+errorP[i]=sqrt(int2d(Th)((p-ph)*(p-ph)));
+
+
+n=2*n;
+}
+
+for(int i=0; i<6; i++){
+cout<<"error for u with H0-norm = "<<errorH0[i]<<endl;
+}
+cout<<"-------------------------------------------------"<<endl;
+for(int i=0; i<6; i++){
+cout<<"error for u with H1-norm = "<<errorH1[i]<<endl;
+}
+cout<<"-------------------------------------------------"<<endl;
+for(int i=0; i<6; i++){
+cout<<"error for p with H0-norm = "<<errorP[i]<<endl;
+}
+cout<<"-------------------------------------------------"<<endl;
+for(int i=1; i<6; i++){
+
+cout<<"error order for u with H0-norm = "<<log(errorH0[i]/errorH0[i+1])/log(2.)<<endl;
+cout<<"error order for u with H1-norm = "<<log(errorH1[i]/errorH1[i+1])/log(2.)<<endl;
+cout<<"error order for p with H0-norm = "<<log(errorP[i]/errorP[i+1])/log(2.)<<endl;
+cout<<"-------------------------------------------------"<<endl;
+
+}
